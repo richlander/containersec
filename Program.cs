@@ -36,7 +36,7 @@ namespace containersec
                 var repo = lines[0];
                 var tag = lines[1];
 
-                for (int i = 20;i < lines.Length;i++)
+                for (int i = 2;i < lines.Length;i++)
                 {
                     var digest = lines[i];
                     var image = $"{repo}@{digest}";

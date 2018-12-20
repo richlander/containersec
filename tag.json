@@ -1,0 +1,4 @@
+{
+  "image_type": "docker",
+  "tag": "docker.io/alpine:3.7"
+}

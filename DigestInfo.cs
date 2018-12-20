@@ -9,5 +9,5 @@ public class DigestInfo
     public string tag;
     public string created_at;
 
-    public Dictionary<string,List<Vulnerability>> Vulnerabilities = new Dictionary<string, List<Vulnerability>>();
+    //public Dictionary<string,List<Vulnerability>> Vulnerabilities = new Dictionary<string, List<Vulnerability>>();
 }

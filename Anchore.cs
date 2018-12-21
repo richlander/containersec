@@ -76,7 +76,6 @@ public class Anchore
             info.ImageId = detail.Value<string>(imageId);
             info.Digest = detail.Value<string>(digest);
             info.TimeStamp = detail.Value<string>(timestamp);
-
             yield return info;
         }
     }
@@ -114,13 +113,20 @@ public class Anchore
         return vulnerabilities;
     }
 
-
-    public static async Task<bool> RegisterImage(string tag)
+    // docker-compose exec engine-api anchore-cli --u admin --p foobar image add microsoft/dotnet:2.2-sdk
+    // curl -XPOST -H "content-type: application/json" -u admin:foobar http://localhost:8228/v1/images -d"@/root/imageadd_bydigest.json"
+    /* # cat /root/imageadd_bydigest.json
+    {
+    "digest": "sha256:0873c923e00e0fd2ba78041bfb64a105e1ecb7678916d1f7776311e45bf5634b",
+    "image_type": "docker",
+    "tag": "docker.io/alpine:latest",
+    "created_at": "2018-11-01T00:33:42Z"
+    }
+    */
+    public static async Task<bool> RegisterImage(ImageInfo image)
     {
         var request = GetRequestMessage();
         request.Method = HttpMethod.Post;
-        var image = new ImageInfo();
-        image.Tag = tag;
         var json = JsonConvert.SerializeObject(image);
         var content = new StringContent(json);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");

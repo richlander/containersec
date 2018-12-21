@@ -37,6 +37,10 @@ namespace containersec
                 {
                     PrintMenu();
                 }
+                else if (input.StartsWith("add"))
+                {
+                    
+                }
                 else if (input == "list")
                 {
                     await foreach (var image in Anchore.GetImages())

@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using containersec;
 
-public class Anchore
+public static class Anchore
 {
 
     private static string s_baseUrl = "http://localhost:8228/v1";
@@ -58,6 +58,7 @@ public class Anchore
         var imageId = "imageId";
         var digest = "digest";
         var timestamp = "created_at";
+        var analysis = "analysis_status";
 
         var request = GetRequestMessage();
         request.RequestUri = new Uri($"{BaseUrl}/images");
@@ -70,6 +71,7 @@ public class Anchore
         foreach (JToken resultObj in resultArray)
         {
             var info = new ImageInfo();
+            info.Analysis = resultObj.Value<string>(analysis);
             var detailArray = resultObj.Value<JToken>(image_detail);
             var detail = (JToken)detailArray[0];
             info.Tag = detail.Value<string>(tagName);
@@ -95,13 +97,16 @@ public class Anchore
         return image;
     }
 
+    public static async Task<List<Vulnerability>> GetVulnerabilitiesForTag(string tag)
+    {
+        var image = await GetImageInfoForTag(tag);
+        return await GetVulnerabilitiesForImage(image);
+    }
+
     // docker-compose exec engine-api anchore-cli --u admin --p foobar image vuln microsoft/dotnet:2.2-sdk all
     // curl -u admin:foobar http://localhost:8228/v1/images/sha256:a0f63e884cec2505b0ae505e1c314be4c5b4071868b8ad3cd36d0ab414df3ae5/vuln/all
-    public static async Task<List<Vulnerability>> GetVulnerabilitiesForImage(string tag)
+    public static async Task<List<Vulnerability>> GetVulnerabilitiesForImage(ImageInfo image)
     {
-
-        var image = await GetImageInfoForTag(tag);
-
         var request = GetRequestMessage();
         request.RequestUri = new Uri($"{BaseUrl}/images/{image.Digest}/vuln/all");
 
@@ -127,6 +132,7 @@ public class Anchore
     {
         var request = GetRequestMessage();
         request.Method = HttpMethod.Post;
+        request.RequestUri = new Uri($"{BaseUrl}/images");
         var json = JsonConvert.SerializeObject(image);
         var content = new StringContent(json);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");

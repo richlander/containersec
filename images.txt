@@ -7,11 +7,11 @@ microsoft/dotnet:2.2-aspnetcore-runtime-bionic
 microsoft/dotnet:2.2-sdk-alpine
 microsoft/dotnet:2.2-runtime-alpine
 microsoft/dotnet:2.2-aspnetcore-runtime-alpine
-microsoft/powershell:ubuntu-18.04
-microsoft/powershell:ubuntu-16.04
-microsoft/powershell:centos-7
-microsoft/powershell:fedora-27
-microsoft/powershell:fedora-28
+mcr.microsoft.com/powershell:ubuntu-18.04
+mcr.microsoft.com/powershell:ubuntu-16.04
+mcr.microsoft.com/powershell:centos-7
+mcr.microsoft.com/powershell:fedora-27
+mcr.microsoft.com/powershell:fedora-28
 microsoft/mssql-server-linux
 debian:9
 ubuntu:bionic

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using static System.Console;
 
@@ -22,9 +23,12 @@ namespace containersec
                 WriteLine("commands:");
                 WriteLine("  help -- prints help");
                 WriteLine("  list -- lists images");
+                WriteLine("  add [file] -- add images in file");
                 WriteLine("  vuln [image] [high | low | all] -- summarizes vulnerabilities for image");
                 WriteLine("  q -- quits program");
             }
+
+            await VulnerabilityAnalysis.DiffVulnerabilities();
 
             string input = "help";
             while (true)
@@ -37,15 +41,29 @@ namespace containersec
                 {
                     PrintMenu();
                 }
+                else if (input.StartsWith("addtag"))
+                {
+                    var arguments = input.Split(' ');
+                    await ImageLoad.Image(arguments[1]);
+
+                }
                 else if (input.StartsWith("add"))
                 {
-                    
+
+                    await ImageLoad.ImagesFromFile(new FileInfo(@"c:\git\containersec\images.txt"));
+
+                }
+                else if (input.StartsWith("process"))
+                {
+                    var logLocation = Path.Combine(Directory.GetCurrentDirectory(),"logs");
+                    await VulnerabilityAnalysis.ProcessImages(new DirectoryInfo(logLocation));
                 }
                 else if (input == "list")
                 {
                     await foreach (var image in Anchore.GetImages())
                     {
-                        WriteLine($"{image.Tag}");
+                        var analysis = (image.Analysis == "analyzed") ? string.Empty : $"[{image.Analysis}] ";
+                        WriteLine($"{analysis}{image.Tag}");
                     }
                 }
                 else if (input.StartsWith("vuln"))
@@ -58,13 +76,13 @@ namespace containersec
                     }
                     else
                     {
-                        var vulnerabilities = await Anchore.GetVulnerabilitiesForImage(arguments[1]);
-                        var summary = Analysis.GetVulnerabilitySummary(vulnerabilities);
+                        var vulnerabilities = await Anchore.GetVulnerabilitiesForTag(arguments[1]);
+                        var summary = VulnerabilityAnalysis.GetSummary(vulnerabilities);
                         
                         if (arguments.Length == 3)
                         {
                             var severityLevel = arguments[2];
-                            var (valid, count) = GetVulnerabilityCountForSeverityLevel(summary, severityLevel);
+                            var (valid, count) = VulnerabilityAnalysis.GetCountForSeverityLevel(summary, severityLevel);
                             
                             if (valid)
                             {
@@ -80,7 +98,6 @@ namespace containersec
                             WriteLine(summary);
                         }
                     }
-
                 }
                 else
                 {
@@ -90,36 +107,6 @@ namespace containersec
                 
                 input = ReadLine();
             }
-
-            (bool, int) GetVulnerabilityCountForSeverityLevel(VulnerabilitySummary summary ,string severity)
-            {
-                var count = 0;
-                switch (severity.ToLowerInvariant())
-                {
-                    case "critical":
-                        count = summary.Critical;
-                        break;
-                    case "high":
-                        count = summary.High;
-                        break;
-                    case "medium":
-                        count = summary.Medium;
-                        break;
-                    case "low":
-                        count = summary.Low;
-                        break;
-                    case "negligible":
-                        count = summary.Negligible;
-                        break;
-                    case "Unknown":
-                        count = summary.Unknown;
-                        break;
-                    default:
-                        return (false, 0);
-                };
-
-                return (true, count);
-            }       
         }
     }
 }

@@ -3,13 +3,14 @@ using System.IO;
 using System.Threading.Tasks;
 using static System.Console;
 
+//#error version
+
 namespace containersec
 {
     class Program
     {
         static async Task Main(string[] args)
         {
-
             var status = await Anchore.CheckStatus();
 
             if (!status)
@@ -17,6 +18,9 @@ namespace containersec
                 WriteLine($"Anchore Engine is not available at {Anchore.BaseUrl}");
                 return;
             }
+
+            var logLocation = Path.Combine(Directory.GetCurrentDirectory(),"logs");
+            var logDir = new DirectoryInfo(logLocation);
 
             void PrintMenu()
             {
@@ -28,7 +32,7 @@ namespace containersec
                 WriteLine("  q -- quits program");
             }
 
-            await VulnerabilityAnalysis.DiffVulnerabilities();
+            //await VulnerabilityAnalysis.DiffVulnerabilities();
 
             string input = "help";
             while (true)
@@ -45,7 +49,6 @@ namespace containersec
                 {
                     var arguments = input.Split(' ');
                     await ImageLoad.Image(arguments[1]);
-
                 }
                 else if (input.StartsWith("add"))
                 {
@@ -53,10 +56,13 @@ namespace containersec
                     await ImageLoad.ImagesFromFile(new FileInfo(@"c:\git\containersec\images.txt"));
 
                 }
+                else if (input.StartsWith("diff"))
+                {
+                    await VulnerabilityAnalysis.DiffVulnerabilities(logDir);
+                }
                 else if (input.StartsWith("process"))
                 {
-                    var logLocation = Path.Combine(Directory.GetCurrentDirectory(),"logs");
-                    await VulnerabilityAnalysis.ProcessImages(new DirectoryInfo(logLocation));
+                    await VulnerabilityAnalysis.ProcessImages(logDir);
                 }
                 else if (input == "list")
                 {

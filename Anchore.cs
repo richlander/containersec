@@ -155,19 +155,4 @@ public static class Anchore
         request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:foobar")));
         return request;
     }
-
-}
-
-namespace System.Collections.Generic
-{
-    public interface IAsyncEnumerable<out T>
-    {
-        IAsyncEnumerator<T> GetAsyncEnumerator();
-    }
-
-    public interface IAsyncEnumerator<out T> : System.IAsyncDisposable
-    {
-        System.Threading.Tasks.ValueTask<bool> MoveNextAsync();
-        T Current { get; }
-    }
 }

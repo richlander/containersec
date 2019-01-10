@@ -7,6 +7,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using containersec;
 
 public static class Anchore
@@ -72,6 +73,10 @@ public static class Anchore
         {
             var info = new ImageInfo();
             info.Analysis = resultObj.Value<string>(analysis);
+            if (info.Analysis == "analysis_failed")
+            {
+                continue;
+            }
             var detailArray = resultObj.Value<JToken>(image_detail);
             var detail = (JToken)detailArray[0];
             info.Tag = detail.Value<string>(tagName);
@@ -80,6 +85,31 @@ public static class Anchore
             info.TimeStamp = detail.Value<string>(timestamp);
             yield return info;
         }
+    }
+
+    public static async Task<Dictionary<string, List<ImageInfo>>> GetAggregatedImages()
+    {
+        var images = new Dictionary<string, List<ImageInfo>>();
+        
+        await foreach (var image in GetImages())
+        {
+            if (images.TryGetValue(image.Tag, out var list))
+            {
+                list.Add(image);
+            }
+            else
+            {
+                images.Add(image.Tag, new List<ImageInfo>(){image});
+            }
+        }
+
+        foreach(var key in images.Keys.ToList())
+        {
+            var unorderedImages = images[key];
+            images[key] = unorderedImages.OrderByDescending(i => DateTime.Parse(i.TimeStamp)).ToList();
+        }
+
+        return images;
     }
 
     private static async Task<ImageInfo> GetImageInfoForTag(string tag)
@@ -119,7 +149,50 @@ public static class Anchore
             return new List<Vulnerability>();
         }
         var vulnerabilities = vulnArray.ToObject<List<Vulnerability>>();
+
         return vulnerabilities;
+    }
+
+    public static async Task<List<Vulnerability>> GetVulnerabilitiesForVulns(List<string> vulns)
+    {
+        var vulnerabilities = new List<Vulnerability>();
+        foreach (var vuln in vulns)
+        {
+            var v = await GetVulnerabilityForVuln(vuln);
+            vulnerabilities.Add(v);
+        }
+        return vulnerabilities;
+    }
+
+    // curl -u admin:foobar http://localhost:8228/v1/query/images/by_vulnerability?vulnerability_id="RHSA-2018:2570"
+    // curl -u admin:foobar http://localhost:8228/v1/query/images/by_vulnerability?vulnerability_id="CVE-2004-0971"
+    public static async Task<Vulnerability> GetVulnerabilityForVuln(string vuln)
+    {
+        var vulnerability = new Vulnerability();
+        vulnerability.vuln = vuln;
+        var request = GetRequestMessage();
+        request.RequestUri = new Uri($"{BaseUrl}/query/images/by_vulnerability?vulnerability_id={vuln}");
+
+        var response = await s_client.SendAsync(request);
+        var resultJson = await response.Content.ReadAsStringAsync();
+        var resultObj = JsonConvert.DeserializeObject<JToken>(resultJson);
+        var vulnArray = resultObj.Value<JArray>("images");
+        if (vulnArray == null || vulnArray.Count == 0)
+        {
+            return vulnerability;
+        }
+        var vulnPackages = vulnArray[0].Value<JArray>("vulnerable_packages");
+        if (vulnPackages == null || vulnPackages.Count == 0)
+        {
+            return vulnerability;
+        }
+        var vulnSeverity = vulnPackages[0].Value<string>("severity");
+        if (vulnSeverity == null)
+        {
+            throw new Exception();
+        }
+        vulnerability.severity = vulnSeverity;
+        return vulnerability;
     }
 
     // docker-compose exec engine-api anchore-cli --u admin --p foobar image add microsoft/dotnet:2.2-sdk

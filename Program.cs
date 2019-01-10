@@ -32,8 +32,6 @@ namespace containersec
                 WriteLine("  q -- quits program");
             }
 
-            //await VulnerabilityAnalysis.DiffVulnerabilities();
-
             string input = "help";
             while (true)
             {
@@ -48,17 +46,18 @@ namespace containersec
                 else if (input.StartsWith("addtag"))
                 {
                     var arguments = input.Split(' ');
-                    await ImageLoad.Image(arguments[1]);
+                    await Image.Load(arguments[1]);
                 }
                 else if (input.StartsWith("add"))
                 {
 
-                    await ImageLoad.ImagesFromFile(new FileInfo(@"c:\git\containersec\images.txt"));
+                    await Image.LoadFromFile(new FileInfo(@"c:\git\containersec\images.txt"));
 
                 }
                 else if (input.StartsWith("diff"))
                 {
-                    await VulnerabilityAnalysis.DiffVulnerabilities(logDir);
+                    var arguments = input.Split(' ');
+                    await VulnerabilityAnalysis.DiffVulnerabilities(logDir, arguments[1]);
                 }
                 else if (input.StartsWith("process"))
                 {

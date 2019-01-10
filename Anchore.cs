@@ -114,6 +114,10 @@ public static class Anchore
         var resultJson = await response.Content.ReadAsStringAsync();
         var resultObj = JsonConvert.DeserializeObject<JToken>(resultJson);
         var vulnArray = resultObj.Value<JArray>("vulnerabilities");
+        if (vulnArray == null)
+        {
+            return new List<Vulnerability>();
+        }
         var vulnerabilities = vulnArray.ToObject<List<Vulnerability>>();
         return vulnerabilities;
     }

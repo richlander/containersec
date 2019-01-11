@@ -1,0 +1,6 @@
+{
+"digest": "sha256:f807658a3aba4918a87018fd1c39e1af4e8894c981f251d31cd3553a0436cdac",
+"image_type": "docker",
+"tag": "docker.io/microsoft/dotnet:2.2-sdk",
+"created_at": "2018-11-30T18:18:30Z"
+}

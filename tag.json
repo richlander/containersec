@@ -1,0 +1,6 @@
+    {
+      "digest": "sha256:0873c923e00e0fd2ba78041bfb64a105e1ecb7678916d1f7776311e45bf5634b",
+      "image_type": "docker",
+      "tag": "docker.io/alpine:latest",
+      "created_at": "2018-11-01T00:33:42Z"
+    }

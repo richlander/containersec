@@ -54,6 +54,10 @@ namespace containersec
                     await Image.LoadFromFile(new FileInfo(@"c:\git\containersec\images.txt"));
 
                 }
+                else if (input.StartsWith("deleteall"))
+                {
+                    await Anchore.DeleteAllImages();
+                }
                 else if (input.StartsWith("diff"))
                 {
                     var arguments = input.Split(' ');

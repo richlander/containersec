@@ -224,6 +224,29 @@ public static class Anchore
         return (analyzed == "analyzed");
     }
 
+    // curl -v -XDELETE -u admin:foobar http://localhost:8228/v1/images/sha256:d36a13f495adb9f5fa5cb2853dd437a659f5245edd11dd9d5e3932ada0d47cd1
+    public static async Task DeleteImage(ImageInfo image)
+    {
+        var request = GetRequestMessage();
+        request.Method = HttpMethod.Delete;
+        request.RequestUri = new Uri($"{BaseUrl}/images/{image.Digest}?force=true");
+        var client = new HttpClient();
+        var result = await client.SendAsync(request);
+        var resultJson = await result.Content.ReadAsStringAsync();
+    }
+
+    public static async Task DeleteAllImages()
+    {
+        var work = new List<Task>();
+        await foreach(var image in GetImages())
+        {
+            var task = DeleteImage(image);
+            work.Add(task);
+        }
+
+        Task.WaitAll(work.ToArray());
+    }
+
 
     private static HttpRequestMessage GetRequestMessage()
     {
